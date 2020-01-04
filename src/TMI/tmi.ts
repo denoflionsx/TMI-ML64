@@ -21,7 +21,7 @@ class tmi implements IPlugin {
 
     @EventHandler("TMI:onMessage")
     onMessage(evt: any) {
-        if (evt.msg === "!points"){
+        if (evt.msg === "!points") {
             evt.reply("@" + evt.tags.username + ": You have " + this.database[evt.tags["user-id"]!] + " points.");
         }
     }
@@ -64,6 +64,9 @@ class tmi implements IPlugin {
         } else {
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }
+        setInterval(() => {
+            fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
+        }, 60 * 1000);
         if (fs.existsSync(this.optsFile)) {
             this.opts = JSON.parse(fs.readFileSync(this.optsFile).toString());
             this.client = Client(this.opts);
@@ -81,12 +84,12 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 0, reply: (msg: string) => {
+                    msg: message.toLowerCase(), tags: tags, points: 1, reply: (msg: string) => {
                         this.client.say(channel, msg);
                     }
                 };
                 bus.emit("TMI:onMessage", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("cheer", (channel, tags, message) => {
                 if (!this.database.hasOwnProperty(tags["user-id"])) {
@@ -98,7 +101,7 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onCheer", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("resub", (channel, username, months, message, tags, methods) => {
                 if (!this.database.hasOwnProperty(tags["user-id"])) {
@@ -110,19 +113,19 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onResub", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("subgift", (channel, username, streakMonths, recipient, methods, tags) => {
                 if (!this.database.hasOwnProperty(tags["user-id"])) {
                     this.database[tags["user-id"]!] = 0;
                 }
-                let evt: any =  {
+                let evt: any = {
                     msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths, reply: (msg: string) => {
                         this.client.say(channel, msg);
                     }
                 };
                 bus.emit("TMI:onGiftsub", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("submysterygift", (channel, username, numbOfSubs, methods, tags) => {
                 if (!this.database.hasOwnProperty(tags["user-id"])) {
@@ -134,7 +137,7 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onMysterysub", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("subscription", (channel, username, method, message, tags) => {
                 if (!this.database.hasOwnProperty(tags["user-id"])) {
@@ -146,7 +149,7 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onSub", evt);
-                this.database[tags["user-id"]!]+=evt.points;
+                this.database[tags["user-id"]!] += evt.points;
             });
             this.client.on("hosted", (channel, username, viewers, autohost) => {
                 bus.emit("TMI:onHost", {
