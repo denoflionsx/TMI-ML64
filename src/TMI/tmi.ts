@@ -9,6 +9,7 @@ class tmi implements IPlugin {
     pluginName?: string | undefined;
     client!: Client;
     optsFile: string = "./TMI.json";
+    opts!: TwitchOpts;
 
     preinit(): void {
     }
@@ -48,11 +49,22 @@ class tmi implements IPlugin {
     onRaid(evt: any) {
     }
 
+    @EventHandler("TMI:onConfig")
+    onConfig(evt: any) {
+    }
+
     postinit(): void {
         if (fs.existsSync(this.optsFile)) {
-            let opts: TwitchOpts = JSON.parse(fs.readFileSync(this.optsFile).toString());
-            this.client = Client(opts);
+            this.opts = JSON.parse(fs.readFileSync(this.optsFile).toString());
+            this.client = Client(this.opts);
             this.client.connect();
+            bus.emit("TMI:onConfig", {
+                say: (msg: string) => {
+                    for (let i = 0; i < this.opts.channels.length; i++) {
+                        this.client.say(this.opts.channels[i], msg);
+                    }
+                }
+            });
             this.client.on('message', (channel, tags, message, self) => {
                 if (self) return;
                 bus.emit("TMI:onMessage", {
