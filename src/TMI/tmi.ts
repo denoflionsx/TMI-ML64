@@ -76,6 +76,14 @@ class tmi implements IPlugin {
                     for (let i = 0; i < this.opts.channels.length; i++) {
                         this.client.say(this.opts.channels[i], msg);
                     }
+                },
+                reply: (msg: string) => {
+                    for (let i = 0; i < this.opts.channels.length; i++) {
+                        this.client.say(this.opts.channels[i], msg);
+                    }
+                },
+                whisper: (username: string, msg: string) => {
+                    this.client.whisper(username, msg);
                 }
             });
             this.client.on('message', (channel, tags, message, self) => {
@@ -84,8 +92,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 1, reply: (msg: string) => {
+                    msg: message.toLowerCase(), tags: tags, points: 1, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onMessage", evt);
@@ -96,8 +109,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 0, reply: (msg: string) => {
+                    msg: message.toLowerCase(), tags: tags, points: 0, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onCheer", evt);
@@ -108,8 +126,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months, reply: (msg: string) => {
+                    msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onResub", evt);
@@ -120,8 +143,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths, reply: (msg: string) => {
+                    msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onGiftsub", evt);
@@ -132,8 +160,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods, reply: (msg: string) => {
+                    msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onMysterysub", evt);
@@ -144,8 +177,13 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message, username: username, points: 0, tags: tags, method: method, reply: (msg: string) => {
+                    msg: message, username: username, points: 0, tags: tags, method: method, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 };
                 bus.emit("TMI:onSub", evt);
@@ -153,15 +191,25 @@ class tmi implements IPlugin {
             });
             this.client.on("hosted", (channel, username, viewers, autohost) => {
                 bus.emit("TMI:onHost", {
-                    msg: "", username: username, viewers: viewers, autohost: autohost, reply: (msg: string) => {
+                    msg: "", username: username, viewers: viewers, autohost: autohost, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 });
             });
             this.client.on("raided", (channel, username, viewers) => {
                 bus.emit("TMI:onRaid", {
-                    msg: "", username: username, viewers: viewers, reply: (msg: string) => {
+                    msg: "", username: username, viewers: viewers, 
+                    reply: (msg: string) => {
                         this.client.say(channel, msg);
+                        this.ModLoader.logger.info(msg);
+                    },
+                    whisper: (username: string, msg: string) => {
+                        this.client.whisper(username, msg);
                     }
                 });
             });
