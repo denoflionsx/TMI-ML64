@@ -97,8 +97,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onMessage", evt);
@@ -114,8 +114,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onCheer", evt);
@@ -131,8 +131,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onResub", evt);
@@ -148,8 +148,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onGiftsub", evt);
@@ -165,8 +165,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onMysterysub", evt);
@@ -182,8 +182,8 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
-                        this.client.whisper(username, msg);
+                    whisper: (msg: string) => {
+                        this.client.whisper(tags.username!, msg);
                     }
                 };
                 bus.emit("TMI:onSub", evt);
@@ -196,7 +196,7 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
+                    whisper: (msg: string) => {
                         this.client.whisper(username, msg);
                     }
                 });
@@ -208,7 +208,7 @@ class tmi implements IPlugin {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
                     },
-                    whisper: (username: string, msg: string) => {
+                    whisper: (msg: string) => {
                         this.client.whisper(username, msg);
                     }
                 });
