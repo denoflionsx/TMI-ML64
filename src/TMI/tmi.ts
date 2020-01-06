@@ -2,17 +2,17 @@ import { IPlugin, IModLoaderAPI, ILogger } from "modloader64_api/IModLoaderAPI";
 import { Client, Options } from 'tmi.js';
 import fs from 'fs';
 import { bus, EventHandler } from "modloader64_api/EventHandler";
-import http from 'http';
 
 class tmi implements IPlugin {
 
     ModLoader!: IModLoaderAPI;
     pluginName?: string | undefined;
     client!: Client;
-    optsFile: string = "./TMI.json";
-    dbFile: string = "./TMI_db.json";
+    optsFile = "./TMI.json";
+    dbFile = "./TMI_db.json";
     opts!: TwitchOpts;
     database: any = {};
+    lastSpoke: Map<string, number> = new Map<string, number>();
 
     preinit(): void {
     }
@@ -27,47 +27,26 @@ class tmi implements IPlugin {
         }
     }
 
-    @EventHandler("TMI:onCheer")
-    onCheer(evt: any) {
-    }
-
-    @EventHandler("TMI:onResub")
-    onResub(evt: any) {
-    }
-
-    @EventHandler("TMI:onGiftsub")
-    onGiftSub(evt: any) {
-    }
-
-    @EventHandler("TMI:onMysterysub")
-    onMysterySub(evt: any) {
-    }
-
-    @EventHandler("TMI:onSub")
-    onSub(evt: any) {
-    }
-
-    @EventHandler("TMI:onHost")
-    onHost(evt: any) {
-    }
-
-    @EventHandler("TMI:onRaid")
-    onRaid(evt: any) {
-    }
-
-    @EventHandler("TMI:onConfig")
-    onConfig(evt: any) {
-    }
-
-    @EventHandler("TMI:onGetViewerList")
-    onGetViewerList(list: any){
-        console.log(list);
-        /* for (let i = 0; i < list.chatters.viewers.length; i++){
-            if (!this.database.hasOwnProperty(list.chatters.viewers[i])) {
-                this.database[list.chatters.viewers[i]] = 0;
-            }
-            this.database[list.chatters.viewers[i]]+=10;
-        } */
+    generateEvt(message: string, channel: string, tags: any, evtname: string, ext: any = {}) {
+        if (!this.database.hasOwnProperty(tags["username"]!)) {
+            this.database[tags["username"]!] = 0;
+        }
+        const evt: any = {
+            msg: message.toLowerCase(), tags, points: 1,
+            reply: (msg: string) => {
+                this.client.say(channel, msg);
+                this.ModLoader.logger.info(msg);
+            },
+            whisper: (msg: string) => {
+                this.client.whisper(tags.username!, msg);
+            },
+            balance: this.database[tags["username"]!],
+            ext
+        };
+        bus.emit(evtname, evt);
+        this.database[evt.tags["username"]!] += evt.points;
+        this.lastSpoke.set(evt.tags["username"]!, Date.now());
+        return evt;
     }
 
     postinit(): void {
@@ -77,27 +56,16 @@ class tmi implements IPlugin {
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }
         setInterval(() => {
+            this.lastSpoke.forEach(
+                (value: number, key: string, map: Map<string, number>) => {
+                    this.database[key] += 10;
+                }
+            );
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }, 60 * 1000);
         setInterval(() => {
-            var url = 'http://tmi.twitch.tv/group/user/' + this.opts.channels[0].toLowerCase() + '/chatters';
-
-            http.get(url, (res)=>{
-                var body = '';
-
-                res.on('data', function (chunk) {
-                    body += chunk;
-                });
-
-                res.on('end', function () {
-                    var fbResponse = JSON.parse(body);
-                    console.log(fbResponse);
-                    bus.emit("TMI:onGetViewerList", fbResponse);
-                });
-            }).on('error', function (e) {
-                console.log("Got an error: ", e);
-            });
-        }, 60 * 1000);
+            this.lastSpoke.clear();
+        }, (60 * 1000) * 15);
         if (fs.existsSync(this.optsFile)) {
             this.opts = JSON.parse(fs.readFileSync(this.optsFile).toString());
             this.client = Client(this.opts);
@@ -119,138 +87,28 @@ class tmi implements IPlugin {
             });
             this.client.on('message', (channel, tags, message, self) => {
                 if (self) return;
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 1,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onMessage", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt(message, channel, tags, "TMI:onMessage");
             });
             this.client.on("cheer", (channel, tags, message) => {
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 0,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onCheer", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt(message, channel, tags, "TMI:onCheer");
             });
             this.client.on("resub", (channel, username, months, message, tags, methods) => {
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onResub", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt(message, channel, tags, "TMI:onResub", { months });
             });
             this.client.on("subgift", (channel, username, streakMonths, recipient, methods, tags) => {
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onGiftsub", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt("", channel, tags, "TMI:onGiftsub", { streakMonths, recipient });
             });
             this.client.on("submysterygift", (channel, username, numbOfSubs, methods, tags) => {
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onMysterysub", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt("", channel, tags, "TMI:onMysterysub", { numbOfSubs });
             });
             this.client.on("subscription", (channel, username, method, message, tags) => {
-                if (!this.database.hasOwnProperty(tags["username"]!)) {
-                    this.database[tags["username"]!] = 0;
-                }
-                let evt: any = {
-                    msg: message, username: username, points: 0, tags: tags, method: method,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(tags.username!, msg);
-                    },
-                    balance: this.database[tags["username"]!]
-                };
-                bus.emit("TMI:onSub", evt);
-                this.database[tags["username"]!] += evt.points;
+                this.generateEvt(message, channel, tags, "TMI:onSub");
             });
             this.client.on("hosted", (channel, username, viewers, autohost) => {
-                bus.emit("TMI:onHost", {
-                    msg: "", username: username, viewers: viewers, autohost: autohost,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(username, msg);
-                    },
-                    balance: this.database[username]
-                });
+                this.generateEvt("", channel, { username }, "TMI:onHost", { viewers, autohost });
             });
             this.client.on("raided", (channel, username, viewers) => {
-                bus.emit("TMI:onRaid", {
-                    msg: "", username: username, viewers: viewers,
-                    reply: (msg: string) => {
-                        this.client.say(channel, msg);
-                        this.ModLoader.logger.info(msg);
-                    },
-                    whisper: (msg: string) => {
-                        this.client.whisper(username, msg);
-                    },
-                    balance: this.database[username]
-                });
+                this.generateEvt("", channel, { username }, "TMI:onRaid", { viewers });
             });
         } else {
             this.ModLoader.logger.error("[TMI]: THIS MOD WILL NOT FUNCTION UNTIL YOU CLOSE MODLOADER AND EDIT TMI.JSON!");
@@ -271,9 +129,9 @@ class TwitchOpts implements Options {
         username: "",
         password: ""
     };
-    channels: Array<string> = [];
+    channels: string[] = [];
 
-    constructor(username: string, password: string, channel: Array<string>) {
+    constructor(username: string, password: string, channel: string[]) {
         this.identity["username"] = username;
         this.identity["password"] = password;
         this.channels = channel;
