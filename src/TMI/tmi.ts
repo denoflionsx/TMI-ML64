@@ -61,12 +61,13 @@ class tmi implements IPlugin {
 
     @EventHandler("TMI:onGetViewerList")
     onGetViewerList(list: any){
-        for (let i = 0; i < list.chatters.viewers.length; i++){
+        console.log(list);
+        /* for (let i = 0; i < list.chatters.viewers.length; i++){
             if (!this.database.hasOwnProperty(list.chatters.viewers[i])) {
                 this.database[list.chatters.viewers[i]] = 0;
             }
             this.database[list.chatters.viewers[i]]+=10;
-        }
+        } */
     }
 
     postinit(): void {
@@ -79,7 +80,7 @@ class tmi implements IPlugin {
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }, 60 * 1000);
         setInterval(() => {
-            var url = 'https://tmi.twitch.tv/group/user/' + this.opts.channels[0].toLowerCase() + '/chatters';
+            var url = 'http://tmi.twitch.tv/group/user/' + this.opts.channels[0].toLowerCase() + '/chatters';
 
             http.get(url, (res)=>{
                 var body = '';
@@ -90,6 +91,7 @@ class tmi implements IPlugin {
 
                 res.on('end', function () {
                     var fbResponse = JSON.parse(body);
+                    console.log(fbResponse);
                     bus.emit("TMI:onGetViewerList", fbResponse);
                 });
             }).on('error', function (e) {
@@ -128,7 +130,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onMessage", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -145,7 +148,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onCheer", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -162,7 +166,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onResub", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -179,7 +184,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onGiftsub", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -196,7 +202,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onMysterysub", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -213,7 +220,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(tags.username!, msg);
-                    }
+                    },
+                    balance: this.database[tags["username"]!]
                 };
                 bus.emit("TMI:onSub", evt);
                 this.database[tags["username"]!] += evt.points;
@@ -227,7 +235,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(username, msg);
-                    }
+                    },
+                    balance: this.database[username]
                 });
             });
             this.client.on("raided", (channel, username, viewers) => {
@@ -239,7 +248,8 @@ class tmi implements IPlugin {
                     },
                     whisper: (msg: string) => {
                         this.client.whisper(username, msg);
-                    }
+                    },
+                    balance: this.database[username]
                 });
             });
         } else {
