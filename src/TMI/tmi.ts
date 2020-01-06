@@ -23,7 +23,7 @@ class tmi implements IPlugin {
     @EventHandler("TMI:onMessage")
     onMessage(evt: any) {
         if (evt.msg === "!points") {
-            evt.reply("@" + evt.tags.username + ": You have " + this.database[evt.tags["user-id"]!] + " points.");
+            evt.reply("@" + evt.tags.username + ": You have " + this.database[evt.tags["username"]!] + " points.");
         }
     }
 
