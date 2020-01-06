@@ -67,6 +67,11 @@ class tmi implements IPlugin {
         setInterval(() => {
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }, 60 * 1000);
+        setInterval(() => {
+            Object.keys(this.database).forEach((key: string) => {
+                this.database[key] += 10;
+            });
+        }, 60 * 1000);
         if (fs.existsSync(this.optsFile)) {
             this.opts = JSON.parse(fs.readFileSync(this.optsFile).toString());
             this.client = Client(this.opts);
@@ -92,7 +97,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 1, 
+                    msg: message.toLowerCase(), tags: tags, points: 1,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -109,7 +114,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), tags: tags, points: 0, 
+                    msg: message.toLowerCase(), tags: tags, points: 0,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -126,7 +131,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months, 
+                    msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -143,7 +148,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths, 
+                    msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -160,7 +165,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods, 
+                    msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -177,7 +182,7 @@ class tmi implements IPlugin {
                     this.database[tags["user-id"]!] = 0;
                 }
                 let evt: any = {
-                    msg: message, username: username, points: 0, tags: tags, method: method, 
+                    msg: message, username: username, points: 0, tags: tags, method: method,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -191,7 +196,7 @@ class tmi implements IPlugin {
             });
             this.client.on("hosted", (channel, username, viewers, autohost) => {
                 bus.emit("TMI:onHost", {
-                    msg: "", username: username, viewers: viewers, autohost: autohost, 
+                    msg: "", username: username, viewers: viewers, autohost: autohost,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
@@ -203,7 +208,7 @@ class tmi implements IPlugin {
             });
             this.client.on("raided", (channel, username, viewers) => {
                 bus.emit("TMI:onRaid", {
-                    msg: "", username: username, viewers: viewers, 
+                    msg: "", username: username, viewers: viewers,
                     reply: (msg: string) => {
                         this.client.say(channel, msg);
                         this.ModLoader.logger.info(msg);
