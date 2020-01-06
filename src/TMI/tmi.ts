@@ -2,6 +2,7 @@ import { IPlugin, IModLoaderAPI, ILogger } from "modloader64_api/IModLoaderAPI";
 import { Client, Options } from 'tmi.js';
 import fs from 'fs';
 import { bus, EventHandler } from "modloader64_api/EventHandler";
+import http from 'http';
 
 class tmi implements IPlugin {
 
@@ -58,6 +59,16 @@ class tmi implements IPlugin {
     onConfig(evt: any) {
     }
 
+    @EventHandler("TMI:onGetViewerList")
+    onGetViewerList(list: any){
+        for (let i = 0; i < list.chatters.viewers.length; i++){
+            if (!this.database.hasOwnProperty(list.chatters.viewers[i])) {
+                this.database[list.chatters.viewers[i]] = 0;
+            }
+            this.database[list.chatters.viewers[i]]+=10;
+        }
+    }
+
     postinit(): void {
         if (fs.existsSync(this.dbFile)) {
             this.database = JSON.parse(fs.readFileSync(this.dbFile).toString());
@@ -68,8 +79,21 @@ class tmi implements IPlugin {
             fs.writeFileSync(this.dbFile, JSON.stringify(this.database, null, 2));
         }, 60 * 1000);
         setInterval(() => {
-            Object.keys(this.database).forEach((key: string) => {
-                this.database[key] += 10;
+            var url = 'https://tmi.twitch.tv/group/user/' + this.opts.channels[0].toLowerCase() + '/chatters';
+
+            http.get(url, (res)=>{
+                var body = '';
+
+                res.on('data', function (chunk) {
+                    body += chunk;
+                });
+
+                res.on('end', function () {
+                    var fbResponse = JSON.parse(body);
+                    bus.emit("TMI:onGetViewerList", fbResponse);
+                });
+            }).on('error', function (e) {
+                console.log("Got an error: ", e);
             });
         }, 60 * 1000);
         if (fs.existsSync(this.optsFile)) {
@@ -93,8 +117,8 @@ class tmi implements IPlugin {
             });
             this.client.on('message', (channel, tags, message, self) => {
                 if (self) return;
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: message.toLowerCase(), tags: tags, points: 1,
@@ -107,11 +131,11 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onMessage", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("cheer", (channel, tags, message) => {
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: message.toLowerCase(), tags: tags, points: 0,
@@ -124,11 +148,11 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onCheer", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("resub", (channel, username, months, message, tags, methods) => {
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: message.toLowerCase(), username: username, points: 0, tags: tags, method: methods, months: months,
@@ -141,11 +165,11 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onResub", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("subgift", (channel, username, streakMonths, recipient, methods, tags) => {
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: "", tags: tags, gifter: username, points: 0, recipient: recipient, method: methods, streak: streakMonths,
@@ -158,11 +182,11 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onGiftsub", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("submysterygift", (channel, username, numbOfSubs, methods, tags) => {
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: "", tags: tags, gifter: username, points: 0, num: numbOfSubs, method: methods,
@@ -175,11 +199,11 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onMysterysub", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("subscription", (channel, username, method, message, tags) => {
-                if (!this.database.hasOwnProperty(tags["user-id"])) {
-                    this.database[tags["user-id"]!] = 0;
+                if (!this.database.hasOwnProperty(tags["username"]!)) {
+                    this.database[tags["username"]!] = 0;
                 }
                 let evt: any = {
                     msg: message, username: username, points: 0, tags: tags, method: method,
@@ -192,7 +216,7 @@ class tmi implements IPlugin {
                     }
                 };
                 bus.emit("TMI:onSub", evt);
-                this.database[tags["user-id"]!] += evt.points;
+                this.database[tags["username"]!] += evt.points;
             });
             this.client.on("hosted", (channel, username, viewers, autohost) => {
                 bus.emit("TMI:onHost", {
