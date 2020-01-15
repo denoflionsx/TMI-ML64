@@ -23,7 +23,7 @@ class tmi implements IPlugin {
     @EventHandler("TMI:onMessage")
     onMessage(evt: any) {
         if (evt.msg === "!points") {
-            evt.reply("@" + evt.tags.username + ": You have " + this.database[evt.tags["username"]!] + " points.");
+            evt.reply("@" + evt.tags.username + ": You have " + this.database[evt.tags["user-id"]!] + " points.");
         }
     }
 
@@ -34,11 +34,10 @@ class tmi implements IPlugin {
         const evt: any = {
             msg: message.toLowerCase(), tags, points: 1,
             reply: (msg: string) => {
-                this.client.say(channel, msg);
-                this.ModLoader.logger.info(msg);
+                global.ModLoader["TMIClient"].say(channel, msg);
             },
             whisper: (msg: string) => {
-                this.client.whisper(tags.username!, msg);
+                global.ModLoader["TMIClient"].whisper(tags["username"]!, msg);
             },
             balance: this.database[tags["username"]!],
             ext
@@ -70,19 +69,20 @@ class tmi implements IPlugin {
             this.opts = JSON.parse(fs.readFileSync(this.optsFile).toString());
             this.client = Client(this.opts);
             this.client.connect();
+            global.ModLoader["TMIClient"] = this.client;
             bus.emit("TMI:onConfig", {
                 say: (msg: string) => {
                     for (let i = 0; i < this.opts.channels.length; i++) {
-                        this.client.say(this.opts.channels[i], msg);
+                        global.ModLoader["TMIClient"].say(this.opts.channels[i], msg);
                     }
                 },
                 reply: (msg: string) => {
                     for (let i = 0; i < this.opts.channels.length; i++) {
-                        this.client.say(this.opts.channels[i], msg);
+                        global.ModLoader["TMIClient"].say(this.opts.channels[i], msg);
                     }
                 },
                 whisper: (username: string, msg: string) => {
-                    this.client.whisper(username, msg);
+                    global.ModLoader["TMIClient"].whisper(username, msg);
                 }
             });
             this.client.on('message', (channel, tags, message, self) => {
